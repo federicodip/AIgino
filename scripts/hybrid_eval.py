@@ -225,7 +225,20 @@ def run_judge(results: list[dict], judge_llm, verbose: bool = False) -> list[dic
         print(f"  [{i}/{len(results)}] Judging...", end=" ", flush=True)
 
         try:
-            response = judge_llm.invoke([HumanMessage(content=prompt)])
+            import signal
+
+            def _timeout_handler(signum, frame):
+                raise TimeoutError("Judge call exceeded 5 min")
+
+            # Set 5-min timeout per judge call
+            old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+            signal.alarm(300)
+            try:
+                response = judge_llm.invoke([HumanMessage(content=prompt)])
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+
             text = response.content.strip()
 
             # Extract JSON
@@ -240,7 +253,7 @@ def run_judge(results: list[dict], judge_llm, verbose: bool = False) -> list[dic
             else:
                 r["judge"] = {"factual_score": 0, "source_hit": False,
                               "reasoning": f"Failed to parse judge response: {text[:100]}"}
-        except Exception as e:
+        except (TimeoutError, Exception) as e:
             r["judge"] = {"factual_score": 0, "source_hit": False,
                           "reasoning": f"Judge error: {str(e)[:100]}"}
 
@@ -526,7 +539,8 @@ def main():
 
     # --- Phase 2a: LLM-as-judge ---
     if not args.skip_judge:
-        judge_llm = ChatOllama(model=judge_model, base_url=OLLAMA_BASE_URL, temperature=0.0)
+        judge_llm = ChatOllama(model=judge_model, base_url=OLLAMA_BASE_URL,
+                               temperature=0.0, num_predict=512)
         all_results = run_judge(all_results, judge_llm, args.verbose)
 
     # --- Phase 2b: RAGAS ---
