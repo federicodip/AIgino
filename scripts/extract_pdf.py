@@ -96,7 +96,7 @@ RUNNING_HEADERS = [
 
 # Latin page markers — lines that are just manuscript sigla or reference numbers
 LATIN_SIGLA_RE = re.compile(
-    r"^[\s]*[ABCDEFGHJKLMNPQRSTUVWXYZ()]+[\s]*$"
+    r"^[\s]*[A-Z][A-Za-z().*]*[\s]*$"
 )
 LATIN_REF_RE = re.compile(
     r"^T\s*\d+[\.\d]*\s*=\s*L\s*\d+"
@@ -203,9 +203,17 @@ def is_english_page(doc, pdf_page: int) -> bool:
     first = lines[0]
     if PAGE_NUM_RE.match(first):
         return False  # Latin pages start with their page number
-    if LATIN_SIGLA_RE.match(first) and len(first) < 15:
+    # Sigla are short uppercase sequences like "Gp", "AP(F)", "B(Gp)", "ABEP"
+    # But NOT English section headers like "LIMITES", "LANDS", etc.
+    ENGLISH_HEADERS = {"LIMITES", "LANDS", "TOMBS"}
+    if (LATIN_SIGLA_RE.match(first) and len(first) < 8
+            and first.strip() not in ENGLISH_HEADERS):
         return False
     if LATIN_REF_RE.match(first):
+        return False
+
+    # Also check line 2 — some Latin pages have sigla on line 1, ref on line 2
+    if len(lines) > 1 and LATIN_REF_RE.match(lines[1]):
         return False
 
     return True
