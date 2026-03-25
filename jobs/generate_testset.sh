@@ -32,7 +32,7 @@ sleep 15
 
 # Warm up model
 echo "Loading model..."
-curl -s http://localhost:11434/api/generate -d '{"model": "qwen3.5:27b", "prompt": "", "keep_alive": "60m"}' > /dev/null
+curl -s http://localhost:11434/api/generate -d '{"model": "gemma3:12b", "prompt": "", "keep_alive": "60m"}' > /dev/null
 echo "Model loaded."
 
 # --- Generate testset ---
@@ -40,7 +40,7 @@ echo ""
 echo "Generating synthetic QA pairs..."
 apptainer exec \
     --env OLLAMA_BASE_URL=http://localhost:11434 \
-    --env CHAT_MODEL=qwen3.5:27b \
+    --env CHAT_MODEL=gemma3:12b \
     --env CHUNKS_FILE=data/chunks/chunked_pages.jsonl \
     ${CONTAINER_SIF} python ${PROJECT_DIR}/scripts/generate_testset.py \
         --num-questions 50 \
