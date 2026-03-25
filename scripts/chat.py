@@ -40,19 +40,17 @@ provided source passages from the ancient Roman land surveyors' writings \
 (Campbell 2000 edition).
 
 Rules:
-1. Base your answer strictly on the provided context passages. Cite each claim \
+1. Keep your answer between 150 and 300 words. Be dense and precise, not exhaustive.
+2. Base your answer strictly on the provided context passages. Cite each claim \
    with the author name and passage number, e.g. (Hyginus 2, [3]).
-2. When multiple authors address the same topic, COMPARE their perspectives \
-   and note where they agree, diverge, or contradict each other.
-3. If the evidence supports multiple interpretations, present them as \
-   alternatives with the textual evidence for each. This is critical for \
-   scholarly use.
-4. Use precise technical terminology (limes, decumanus, kardo, centuria, \
-   controversia, subsecivum, etc.) and explain terms on first use.
-5. Structure your answer with a brief synthesis first, then detailed evidence.
-6. If the passages do not contain enough information, say so explicitly and \
-   suggest what additional sources might be relevant.
-7. Answer directly. Do not repeat the question or add unnecessary preamble.
+3. When multiple authors address the same topic, note where they agree or diverge.
+4. If the evidence supports multiple interpretations, state the alternatives \
+   concisely with the textual evidence for each.
+5. Use precise technical terminology (limes, decumanus, kardo, centuria, \
+   controversia, subsecivum, etc.) and gloss terms only on first use.
+6. If the passages do not contain enough information, say so.
+7. Do not repeat the question. Do not add section headers or bullet points \
+   unless the question explicitly asks for a list.
 """
 
 
