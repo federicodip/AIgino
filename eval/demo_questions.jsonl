@@ -1,0 +1,10 @@
+{"id": "simple_01", "category": "simple_retrieval", "question": "What is the difference between limes and finis?"}
+{"id": "simple_02", "category": "simple_retrieval", "question": "How are boundary stones described and what information do they carry?"}
+{"id": "author_01", "category": "author_specific", "question": "How does Hyginus 2 explain the relationship between limites and the cosmos?"}
+{"id": "author_02", "category": "author_specific", "question": "What role does Siculus Flaccus assign to rivers and natural features in boundary disputes?"}
+{"id": "cross_01", "category": "cross_author", "question": "How do the different authors define and classify types of land? Where do they disagree?"}
+{"id": "cross_02", "category": "cross_author", "question": "Do Frontinus and Agennius Urbicus describe land disputes in the same way, or do they reflect different legal frameworks?"}
+{"id": "challenge_01", "category": "challenge_interpretation", "question": "What evidence in the texts suggests that Roman land division was not always based on a regular grid of centuriation?"}
+{"id": "challenge_02", "category": "challenge_interpretation", "question": "How do the surveyors describe the treatment of land that falls outside the centuriated grid - subseciva and loca relicta?"}
+{"id": "procedure_01", "category": "procedure", "question": "What practical steps does Hyginus 2 describe for actually carrying out a land division in the field?"}
+{"id": "procedure_02", "category": "procedure", "question": "How is the groma used according to the texts, and what role does celestial observation play in orienting the survey?"}

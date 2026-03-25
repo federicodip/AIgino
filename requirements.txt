@@ -1,0 +1,12 @@
+PyMuPDF
+python-dotenv
+chromadb
+langchain
+langchain-chroma
+langchain-ollama
+langchain-core
+langchain-huggingface
+ragas
+numpy
+scipy
+openai
