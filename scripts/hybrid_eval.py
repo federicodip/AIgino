@@ -230,7 +230,10 @@ def run_judge(results: list[dict], judge_llm, verbose: bool = False,
     print(f"\nPhase 2a: LLM-as-judge ({len(results)} questions)")
 
     for i, r in enumerate(results, 1):
+        # Skip already-judged results (but retry failures)
         if "judge" in r and r["judge"] is not None:
+            reasoning = r["judge"].get("reasoning", "")
+            if not reasoning.startswith("Failed") and not reasoning.startswith("Judge error"):
             continue  # already scored (resume)
 
         prompt = JUDGE_PROMPT.format(
@@ -586,7 +589,7 @@ def main():
     # --- Phase 2a: LLM-as-judge ---
     if not args.skip_judge:
         judge_llm = ChatOllama(model=judge_model, base_url=OLLAMA_BASE_URL,
-                               temperature=0.0, num_predict=512)
+                               temperature=0.0, num_predict=4096)
         all_results = run_judge(all_results, judge_llm, args.verbose,
                                 save_fn=save_results)
         save_results(all_results)  # final flush after judge
