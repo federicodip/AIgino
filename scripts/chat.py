@@ -164,23 +164,13 @@ def main():
             print("Bye.")
             break
 
-        # Retrieve (fetch extra, then deduplicate by Latin page)
-        raw_results = vectorstore.similarity_search(query, k=args.top_k * 2)
+        # Retrieve with author diversity + Latin term expansion
+        from retrieval import retrieve_diverse
+        results = retrieve_diverse(vectorstore, query, top_k=args.top_k)
 
-        if not raw_results:
+        if not results:
             print("\nNo relevant passages found.\n")
             continue
-
-        # Deduplicate: keep one chunk per (author, pdf_page_la) pair
-        seen = set()
-        results = []
-        for doc in raw_results:
-            key = (doc.metadata.get("author_id", ""), doc.metadata.get("pdf_page_la", -1))
-            if key not in seen:
-                seen.add(key)
-                results.append(doc)
-            if len(results) >= args.top_k:
-                break
 
         # Display retrieved passages
         display_results(results)

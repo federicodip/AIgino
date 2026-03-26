@@ -115,20 +115,10 @@ def run_inference(vectorstore, llm, questions: list[dict], top_k: int,
         question = q["question"]
         print(f"  [{i}/{len(questions)}] {question[:60]}...", end=" ", flush=True)
 
+        from retrieval import retrieve_diverse
+
         t0 = time.time()
-
-        # Retrieve (with dedup)
-        raw_docs = vectorstore.similarity_search(question, k=top_k * 2)
-        seen = set()
-        docs = []
-        for doc in raw_docs:
-            key = (doc.metadata.get("author_id", ""), doc.metadata.get("pdf_page_la", -1))
-            if key not in seen:
-                seen.add(key)
-                docs.append(doc)
-            if len(docs) >= top_k:
-                break
-
+        docs = retrieve_diverse(vectorstore, question, top_k=top_k)
         retrieval_time = time.time() - t0
 
         # Build context
@@ -597,20 +587,12 @@ def main():
     # --- Phase 2b: RAGAS ---
     if not args.skip_ragas:
         # Re-retrieve contexts for any results that are missing them (from resume)
+        from retrieval import retrieve_diverse
         missing_ctx = [r for r in all_results if "retrieved_contexts" not in r]
         if missing_ctx:
             print(f"\nRe-retrieving contexts for {len(missing_ctx)} questions (missing from resume)...")
             for r in missing_ctx:
-                raw_docs = vectorstore.similarity_search(r["question"], k=args.top_k * 2)
-                seen = set()
-                docs = []
-                for doc in raw_docs:
-                    key = (doc.metadata.get("author_id", ""), doc.metadata.get("pdf_page_la", -1))
-                    if key not in seen:
-                        seen.add(key)
-                        docs.append(doc)
-                    if len(docs) >= args.top_k:
-                        break
+                docs = retrieve_diverse(vectorstore, r["question"], top_k=args.top_k)
                 r["retrieved_contexts"] = [doc.page_content for doc in docs]
             print(f"  Done re-retrieving.")
 

@@ -52,5 +52,5 @@ apptainer exec \
     --env CHAT_MODEL=qwen3.5:27b \
     --env CHROMA_DIR=${SCRATCH_DIR}/chroma_db \
     --env CHROMA_COLLECTION=aigino \
-    --env TOP_K=5 \
+    --env TOP_K=8 \
     ${CONTAINER_SIF} python ${PROJECT_DIR}/scripts/chat.py "$@"
