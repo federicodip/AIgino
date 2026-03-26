@@ -234,7 +234,7 @@ def run_judge(results: list[dict], judge_llm, verbose: bool = False,
         if "judge" in r and r["judge"] is not None:
             reasoning = r["judge"].get("reasoning", "")
             if not reasoning.startswith("Failed") and not reasoning.startswith("Judge error"):
-            continue  # already scored (resume)
+                continue  # already scored (resume)
 
         prompt = JUDGE_PROMPT.format(
             question=r["question"],
