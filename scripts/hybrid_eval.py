@@ -262,6 +262,7 @@ def run_judge(results: list[dict], judge_llm, verbose: bool = False,
                 signal.signal(signal.SIGALRM, old_handler)
 
             text = response.content.strip()
+            print(f"\n    [DEBUG judge raw ({len(text)} chars): {text[:200]}...]")
 
             # Extract JSON
             match = re.search(r'\{.*\}', text, re.DOTALL)
