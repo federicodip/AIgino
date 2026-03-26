@@ -67,7 +67,7 @@ Rules:
 # ---------------------------------------------------------------------------
 
 JUDGE_PROMPT = """\
-/no_think
+/nothink
 You are an expert evaluator for a scholarly RAG system about Roman land surveying \
 (the Corpus Agrimensorum Romanorum).
 
@@ -590,7 +590,7 @@ def main():
     # --- Phase 2a: LLM-as-judge ---
     if not args.skip_judge:
         judge_llm = ChatOllama(model=judge_model, base_url=OLLAMA_BASE_URL,
-                               temperature=0.0, num_predict=4096)
+                               temperature=0.0, reasoning=False)
         all_results = run_judge(all_results, judge_llm, args.verbose,
                                 save_fn=save_results)
         save_results(all_results)  # final flush after judge
