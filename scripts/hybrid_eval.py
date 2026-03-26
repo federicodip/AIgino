@@ -319,7 +319,8 @@ def run_ragas(results: list[dict], judge_model: str, verbose: bool = False) -> l
 
     # Set up RAGAS judge and embeddings
     ragas_llm = LangchainLLMWrapper(
-        ChatOllama(model=judge_model, base_url=OLLAMA_BASE_URL, temperature=0.0)
+        ChatOllama(model=judge_model, base_url=OLLAMA_BASE_URL,
+                   temperature=0.0, reasoning=False)
     )
     ragas_embeddings = LangchainEmbeddingsWrapper(
         OllamaEmbeddings(model=EMBEDDING_MODEL, base_url=OLLAMA_BASE_URL)
@@ -552,9 +553,7 @@ def main():
         with open(RESULTS_FILE, "w", encoding="utf-8") as f:
             for r in results:
                 r["timestamp"] = ts
-                save_r = {k: v for k, v in r.items() if k != "retrieved_contexts"}
-                save_r["num_retrieved_contexts"] = len(r.get("retrieved_contexts", []))
-                f.write(json.dumps(save_r, ensure_ascii=False) + "\n")
+                f.write(json.dumps(r, ensure_ascii=False) + "\n")
         print(f"  [saved {len(results)} results to {RESULTS_FILE}]")
 
     # --- Phase 1: Inference ---
@@ -597,6 +596,24 @@ def main():
 
     # --- Phase 2b: RAGAS ---
     if not args.skip_ragas:
+        # Re-retrieve contexts for any results that are missing them (from resume)
+        missing_ctx = [r for r in all_results if "retrieved_contexts" not in r]
+        if missing_ctx:
+            print(f"\nRe-retrieving contexts for {len(missing_ctx)} questions (missing from resume)...")
+            for r in missing_ctx:
+                raw_docs = vectorstore.similarity_search(r["question"], k=args.top_k * 2)
+                seen = set()
+                docs = []
+                for doc in raw_docs:
+                    key = (doc.metadata.get("author_id", ""), doc.metadata.get("pdf_page_la", -1))
+                    if key not in seen:
+                        seen.add(key)
+                        docs.append(doc)
+                    if len(docs) >= args.top_k:
+                        break
+                r["retrieved_contexts"] = [doc.page_content for doc in docs]
+            print(f"  Done re-retrieving.")
+
         all_results = run_ragas(all_results, ragas_judge_model, args.verbose)
 
     # --- Summary ---
