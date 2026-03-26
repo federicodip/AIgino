@@ -106,7 +106,7 @@ Return ONLY a JSON object with these three fields:
 # ---------------------------------------------------------------------------
 
 def run_inference(vectorstore, llm, questions: list[dict], top_k: int,
-                  verbose: bool = False) -> list[dict]:
+                  verbose: bool = False, save_fn=None, all_results=None) -> list[dict]:
     """Run all questions through the RAG pipeline."""
     from langchain_core.messages import SystemMessage, HumanMessage
 
@@ -193,8 +193,12 @@ def run_inference(vectorstore, llm, questions: list[dict], top_k: int,
         print(f"({retrieval_time:.1f}s + {generation_time:.1f}s) [{', '.join(retrieved_authors[:3])}]")
 
         if verbose:
-            print(f"    A: {rag_answer[:150]}...")
+            print(f"    A: {rag_answer}")
             print()
+
+        # Save after each inference call so we never lose progress
+        if save_fn and all_results is not None:
+            save_fn(all_results + results)
 
     return results
 
@@ -539,8 +543,17 @@ def main():
     new_questions = [q for q in questions if q.get("id") not in existing_results]
     print(f"\nPhase 1: RAG Inference ({len(new_questions)} new questions)")
 
+    # Build list of already-completed results (for incremental save)
+    existing_list = []
+    for q in questions:
+        qid = q.get("id")
+        if qid in existing_results:
+            existing_list.append(existing_results[qid])
+
     if new_questions:
-        new_results = run_inference(vectorstore, llm, new_questions, args.top_k, args.verbose)
+        new_results = run_inference(vectorstore, llm, new_questions, args.top_k,
+                                    args.verbose, save_fn=save_results,
+                                    all_results=existing_list)
     else:
         new_results = []
 
