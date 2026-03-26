@@ -152,15 +152,29 @@ def run_inference(vectorstore, llm, questions: list[dict], top_k: int,
             f"Passages:\n{context}"
         )
 
-        # Generate
-        t1 = time.time()
-        response = llm.invoke([
-            SystemMessage(content=RAG_SYSTEM_PROMPT),
-            HumanMessage(content=prompt),
-        ])
-        generation_time = time.time() - t1
+        # Generate (with 5-min timeout to prevent infinite thinking chains)
+        import signal
 
-        rag_answer = response.content
+        def _inf_timeout(signum, frame):
+            raise TimeoutError("Inference exceeded 5 min")
+
+        t1 = time.time()
+        try:
+            old_handler = signal.signal(signal.SIGALRM, _inf_timeout)
+            signal.alarm(300)
+            try:
+                response = llm.invoke([
+                    SystemMessage(content=RAG_SYSTEM_PROMPT),
+                    HumanMessage(content=prompt),
+                ])
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+            rag_answer = response.content
+        except (TimeoutError, Exception) as e:
+            print(f"TIMEOUT/ERROR: {e}")
+            rag_answer = f"[Generation failed: {str(e)[:100]}]"
+        generation_time = time.time() - t1
         retrieved_contexts = [doc.page_content for doc in docs]
         retrieved_authors = list(set(doc.metadata.get("author", "Unknown") for doc in docs))
         sources = [
