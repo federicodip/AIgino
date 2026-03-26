@@ -203,7 +203,8 @@ def run_inference(vectorstore, llm, questions: list[dict], top_k: int,
 # Phase 2a: LLM-as-judge
 # ---------------------------------------------------------------------------
 
-def run_judge(results: list[dict], judge_llm, verbose: bool = False) -> list[dict]:
+def run_judge(results: list[dict], judge_llm, verbose: bool = False,
+              save_fn=None) -> list[dict]:
     """Score each result with LLM-as-judge."""
     from langchain_core.messages import SystemMessage, HumanMessage
     import re
@@ -263,6 +264,10 @@ def run_judge(results: list[dict], judge_llm, verbose: bool = False) -> list[dic
 
         if verbose:
             print(f"    {r['judge']['reasoning']}")
+
+        # Flush after each judge call so we never lose progress
+        if save_fn:
+            save_fn(results)
 
     return results
 
@@ -518,6 +523,18 @@ def main():
     )
     llm = ChatOllama(model=args.model, base_url=OLLAMA_BASE_URL, temperature=0.3)
 
+    # Helper: flush results to disk after each phase
+    def save_results(results):
+        RESULTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        ts = datetime.now(timezone.utc).isoformat()
+        with open(RESULTS_FILE, "w", encoding="utf-8") as f:
+            for r in results:
+                r["timestamp"] = ts
+                save_r = {k: v for k, v in r.items() if k != "retrieved_contexts"}
+                save_r["num_retrieved_contexts"] = len(r.get("retrieved_contexts", []))
+                f.write(json.dumps(save_r, ensure_ascii=False) + "\n")
+        print(f"  [saved {len(results)} results to {RESULTS_FILE}]")
+
     # --- Phase 1: Inference ---
     new_questions = [q for q in questions if q.get("id") not in existing_results]
     print(f"\nPhase 1: RAG Inference ({len(new_questions)} new questions)")
@@ -537,30 +554,19 @@ def main():
         elif qid in new_by_id:
             all_results.append(new_by_id[qid])
 
+    save_results(all_results)  # flush after inference
+
     # --- Phase 2a: LLM-as-judge ---
     if not args.skip_judge:
         judge_llm = ChatOllama(model=judge_model, base_url=OLLAMA_BASE_URL,
                                temperature=0.0, num_predict=512)
-        all_results = run_judge(all_results, judge_llm, args.verbose)
+        all_results = run_judge(all_results, judge_llm, args.verbose,
+                                save_fn=save_results)
+        save_results(all_results)  # final flush after judge
 
     # --- Phase 2b: RAGAS ---
     if not args.skip_ragas:
         all_results = run_ragas(all_results, ragas_judge_model, args.verbose)
-
-    # --- Save results ---
-    RESULTS_FILE.parent.mkdir(parents=True, exist_ok=True)
-
-    # Add timestamps
-    ts = datetime.now(timezone.utc).isoformat()
-    for r in all_results:
-        r["timestamp"] = ts
-
-    with open(RESULTS_FILE, "w", encoding="utf-8") as f:
-        for r in all_results:
-            # Don't save retrieved_contexts to file (too large) — save separately if needed
-            save_r = {k: v for k, v in r.items() if k != "retrieved_contexts"}
-            save_r["num_retrieved_contexts"] = len(r.get("retrieved_contexts", []))
-            f.write(json.dumps(save_r, ensure_ascii=False) + "\n")
 
     # --- Summary ---
     summary = compute_summary(all_results, args.model, judge_model)
