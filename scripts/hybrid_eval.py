@@ -35,8 +35,8 @@ CHROMA_COLLECTION = os.getenv("CHROMA_COLLECTION", "aigino")
 TOP_K = int(os.getenv("TOP_K", "5"))
 
 QUESTIONS_FILE = Path(__file__).parent.parent / "eval" / "eval_questions.jsonl"
-RESULTS_FILE = Path(__file__).parent.parent / "eval" / "hybrid_results.jsonl"
-SUMMARY_FILE = Path(__file__).parent.parent / "eval" / "hybrid_summary.json"
+RESULTS_FILE = Path(__file__).parent.parent / "eval" / "hybrid_results_v2.jsonl"
+SUMMARY_FILE = Path(__file__).parent.parent / "eval" / "hybrid_summary_v2.json"
 
 # ---------------------------------------------------------------------------
 # System prompt (same as chat.py)
